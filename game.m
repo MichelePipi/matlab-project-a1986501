@@ -6,15 +6,21 @@
 
 word_to_guess = 'matlab';
 revealed = {'-', '-', '-', '-', '-', '-'};
-disp(word_to_guess(1))
 finished = false; 
+guess_count = 0; 
 while ~(finished)
     guess = input("What are you going to guess? ", 's');
     % todo input validation 
-    guess = convertStringsToChars(guess);
+    guess_count = guess_count + 1;
+    fprintf("You have currently made %d guess(es).\n", guess_count);
+    guess = convertStringsToChars(guess); % we need to convert this guess into a character array as we cannot access it otherwise 
     for i = 1:strlength(word_to_guess)
+        % disp(string(revealed))
         if (guess == word_to_guess(i))
-            disp("omg")
+            revealed{i}=word_to_guess(i);
+            % disp(string(revealed))
+            disp(cell2mat(revealed)) 
+            % disp(revealed);
         end
     end
 end
