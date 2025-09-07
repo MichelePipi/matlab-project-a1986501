@@ -10,6 +10,7 @@ revealed = {'-', '-', '-', '-', '-', '-'};
 finished = false; 
 won = false;
 guess_count = 0; 
+lives = 6;
 
 ALPHABET = {'a','b','c','d','e','f','g','h','i','j','k','l','m', ...
             'n','o','p','q','r','s','t','u','v','w','x','y','z'};
@@ -20,7 +21,12 @@ disp("In this version (v1.0), the game will play after this message. You will ha
 disp("You will WIN when you have guessed each letter in the hidden word, which will be revealed at the end.")
 
 while ~(finished)
+    if (lives <= 0) % we first check if he has run out of lives as otherwise, we would allow the user to find another 
+        finished = true;
+        continue;
+    end
     fprintf("You have currently made %d guess(es).\n", guess_count);
+    fprintf("You currently have %d live(s) left.\n", lives);
     fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
      % INPUT VALIDATION %
     made_guess = false;
@@ -35,6 +41,7 @@ while ~(finished)
     end
 
     guess_count = guess_count + 1;
+    lives = lives - 1;
     guess = convertStringsToChars(guess); % we need to convert this guess into a character array as we cannot access it otherwise 
     for i = 1:strlength(word_to_guess) % right now this is redundant as the strlength is constant, 
                                        % but when we begin choosing a random word from a list this must use strlength to account for this.
