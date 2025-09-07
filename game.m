@@ -1,4 +1,4 @@
-% Version 1 
+% Version 2
 % Main idea for this part is to have a simple CLI version of the game, 
 % without an output of the actual "hangman" images, and have it display
 % with unlimited lives
@@ -6,10 +6,12 @@
 % 
 
 % CONSTANTS
-word_to_guess = 'matlab';
+WORD_LIST = word_list(); % get the word list from the word list array 
+word_to_guess = WORD_LIST{randi(numel(WORD_LIST))}; % select a random word from the word list to act as our goal for the user
 revealed = {'-', '-', '-', '-', '-', '-'};
 ALPHABET = {'a','b','c','d','e','f','g','h','i','j','k','l','m', ...
             'n','o','p','q','r','s','t','u','v','w','x','y','z'};
+HANGMAN_STAGES = hangman_stages();
 
 % GAME CONDITIONS 
 finished = false; 
@@ -26,7 +28,7 @@ initial_hints = hint_count;
 disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'")
 disp("In this version (v1.0), the game will play after this message. You will have UNLIMITED guesses. To guess, type in any SINGLE ALPHABETIC character.")
 disp("You will WIN when you have guessed each letter in the hidden word, which will be revealed at the end.")
-
+fprintf("The word is currently: %s and it has %d letters in it.\n\n\n", cell2mat(revealed), length(revealed));
 while ~(finished)
     if (lives <= 0) % we first check if he has run out of lives as otherwise, we would allow the user to find another 
         finished = true;
