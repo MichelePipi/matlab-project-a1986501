@@ -17,9 +17,18 @@ ALPHABET = {'a','b','c','d','e','f','g','h','i','j','k','l','m', ...
 while ~(finished)
     fprintf("You have currently made %d guess(es).\n", guess_count);
     fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
-    guess = input("What are you going to guess? ", 's');
-    % INPUT VALIDATION %
-    
+     % INPUT VALIDATION %
+    % first check wehther guess is a character
+
+    made_guess = false;
+    while ~(made_guess) 
+        guess = input("What are you going to guess? ", 's');
+        if ischar(guess) && isscalar(guess) && ismember(guess,ALPHABET) == 1
+            made_guess = true;
+        else
+            disp("Sorry, that doesn't seem right. Make sure you are entering a LOWERCASE ALPHABETIC character ('a', 'b', etc...)")
+        end
+    end
 
     guess_count = guess_count + 1;
     guess = convertStringsToChars(guess); % we need to convert this guess into a character array as we cannot access it otherwise 
