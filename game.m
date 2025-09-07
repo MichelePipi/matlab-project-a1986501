@@ -1,8 +1,6 @@
 % Version 2
-% Main idea for this part is to have a simple CLI version of the game, 
-% without an output of the actual "hangman" images, and have it display
-% with unlimited lives
-% The word will be pre-selected, no main menu, no restart, etc... just playing a single game.
+% Main idea for this part of the project was to add hints, lives, hangman
+% stages in ascii art, more modular win conditions, etc... 
 % 
 
 % CONSTANTS
@@ -20,9 +18,10 @@ won = false;
 
 % PLAYER STATS
 guess_count = 0; 
-lives = 6;
+lives = 8;
 hint_count = 999999;
 initial_hints = hint_count; 
+correct_guesses = {};
 
 % Display instructions
 disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'")
@@ -34,8 +33,9 @@ while ~(finished)
         finished = true;
         continue;
     end
-    fprintf("You have currently made %d guess(es).\n", guess_count);
-    fprintf("You currently have %d live(s) left.\n", lives);
+    fprintf("You have currently made %d guess(es). %d/%d are correct. You have %d guesses left\n", guess_count, length(correct_guesses), guess_count, lives);
+    %fprintf("You currently have %d live(s) left.\n", lives);
+    disp(HANGMAN_STAGES{guess_count+1})
     %fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
     % Hint
     wants_hint = input("Would you like to use one of your " + hint_count + " hint(s)? Type ANYTHING into the input box for yes, leave empty otherwise. ", 's');
@@ -44,7 +44,7 @@ while ~(finished)
         % find index of first element of revealed array that is a '-'
         index = find(strcmp(revealed, '-'), 1); % strcmp returns 1 when the strings are exactly the same 
         revealed{index} = word_to_guess(index);
-        fprintf("You have just usede ONE hint. The letter revealed was '%s'. You have %d hints left\n", revealed{index}, hint_count);
+        fprintf("You have just used ONE hint. The letter revealed was '%s'. You have %d hints left.\n", revealed{index}, hint_count);
        % fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
     end
     fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
@@ -61,14 +61,24 @@ while ~(finished)
     end
 
     guess_count = guess_count + 1;
-    lives = lives - 1;
+    % Since this is hangman, we only want to take a life/guess away when
+    % they guess something wrong, so lets make a flag here to determine
+    % whether they made a good guess.
+    good_guess = false; 
+    %lives = lives - 1;
     guess = convertStringsToChars(guess); % we need to convert this guess into a character array as we cannot access it otherwise 
     for i = 1:strlength(word_to_guess) % right now this is redundant as the strlength is constant, 
                                        % but when we begin choosing a random word from a list this must use strlength to account for this.
         % disp(string(revealed))
         if (guess == word_to_guess(i))
             revealed{i}=word_to_guess(i);
-        end
+            correct_guesses{end+1} = guess;
+            good_guess = true;
+        end 
+    end 
+    if ~good_guess
+        %guess_count = guess_count + 1;
+        lives = lives - 1;
     end
     if strcmp([revealed{:}], word_to_guess) % if the characters that have been guessed fill up the revealed string, i.e if we have finished
         finished = true; % break out of the main game loop
