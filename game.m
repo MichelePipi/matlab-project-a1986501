@@ -5,15 +5,22 @@
 % The word will be pre-selected, no main menu, no restart, etc... just playing a single game.
 % 
 
+% CONSTANTS
 word_to_guess = 'matlab';
 revealed = {'-', '-', '-', '-', '-', '-'};
-finished = false; 
-won = false;
-guess_count = 0; 
-lives = 6;
-
 ALPHABET = {'a','b','c','d','e','f','g','h','i','j','k','l','m', ...
             'n','o','p','q','r','s','t','u','v','w','x','y','z'};
+
+% GAME CONDITIONS 
+finished = false; 
+won = false;
+
+
+% PLAYER STATS
+guess_count = 0; 
+lives = 6;
+hint_count = 999999;
+initial_hints = hint_count; 
 
 % Display instructions
 disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'")
@@ -27,6 +34,17 @@ while ~(finished)
     end
     fprintf("You have currently made %d guess(es).\n", guess_count);
     fprintf("You currently have %d live(s) left.\n", lives);
+    %fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
+    % Hint
+    wants_hint = input("Would you like to use one of your " + hint_count + " hint(s)? Type ANYTHING into the input box for yes, leave empty otherwise. ", 's');
+    if ~(isempty(wants_hint)) % if the input isn't empty then we consider that as a yes
+        hint_count = hint_count - 1; % decrement the amount of hints they have left
+        % find index of first element of revealed array that is a '-'
+        index = find(strcmp(revealed, '-'), 1); % strcmp returns 1 when the strings are exactly the same 
+        revealed{index} = word_to_guess(index);
+        fprintf("You have just usede ONE hint. The letter revealed was '%s'. You have %d hints left\n", revealed{index}, hint_count);
+       % fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
+    end
     fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
      % INPUT VALIDATION %
     made_guess = false;
@@ -59,6 +77,7 @@ end
 
 
 if won
+    fprintf("Congratulations, you WON! You used %d guess(es) and %d hint(s). The word was %s\n.", guess_count, hint_count, word_to_guess);
     disp("Congratulations! You WON! You took " + guess_count + " guess(es). The word was " + word_to_guess + ".")
 else
     disp("Sorry! You lost. The word was " + word_to_guess + ".")
