@@ -14,33 +14,38 @@ guess_count = 0;
 ALPHABET = {'a','b','c','d','e','f','g','h','i','j','k','l','m', ...
             'n','o','p','q','r','s','t','u','v','w','x','y','z'};
 
+% Display instructions
+disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'")
+disp("In this version (v1.0), the game will play after this message. You will have UNLIMITED guesses. To guess, type in any SINGLE ALPHABETIC character.")
+disp("You will WIN when you have guessed each letter in the hidden word, which will be revealed at the end.")
+
 while ~(finished)
     fprintf("You have currently made %d guess(es).\n", guess_count);
     fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
      % INPUT VALIDATION %
-    % first check wehther guess is a character
-
     made_guess = false;
-    while ~(made_guess) 
+    while ~(made_guess) % put user in a loop until they make a VALID guess. 
         guess = input("What are you going to guess? ", 's');
-        if ischar(guess) && isscalar(guess) && ismember(guess,ALPHABET) == 1
-            made_guess = true;
-        else
+        if ischar(guess) && isscalar(guess) && ismember(guess,ALPHABET) == 1 % is it a character, with one element, and is it a member of the ALPHABET array ...
+                                                                             % i.e is it a lowercase alphabetic character?
+            made_guess = true; % we can move on now.
+        else % make an error
             disp("Sorry, that doesn't seem right. Make sure you are entering a LOWERCASE ALPHABETIC character ('a', 'b', etc...)")
         end
     end
 
     guess_count = guess_count + 1;
     guess = convertStringsToChars(guess); % we need to convert this guess into a character array as we cannot access it otherwise 
-    for i = 1:strlength(word_to_guess)
+    for i = 1:strlength(word_to_guess) % right now this is redundant as the strlength is constant, 
+                                       % but when we begin choosing a random word from a list this must use strlength to account for this.
         % disp(string(revealed))
         if (guess == word_to_guess(i))
             revealed{i}=word_to_guess(i);
         end
     end
     if strcmp([revealed{:}], word_to_guess) % if the characters that have been guessed fill up the revealed string, i.e if we have finished
-        finished = true;
-        won = true;
+        finished = true; % break out of the main game loop
+        won = true; % make sure the game knows that the user has WON rather than LOST so we can print out the correct output later. 
         continue;
     end
 end
