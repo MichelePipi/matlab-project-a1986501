@@ -26,18 +26,7 @@ ALPHABET = {'a','b','c','d','e','f','g','h','i','j','k','l','m', ...
             'n','o','p','q','r','s','t','u','v','w','x','y','z'};
 HANGMAN_STAGES = hangman_stages(); 
 player_stats = init_player_stats(); 
-
-% GAME CONDITIONS 
-% finished = false; 
-won = false;
 playing = true;
-
-% PLAYER STATS
-guess_count = 0; 
-lives = 8;
-hint_count = 999999;
-initial_hints = hint_count; 
-correct_guesses = {};
 
 disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'"); % welcome message
 
@@ -59,19 +48,27 @@ while playing
         case 'e'
             disp("Thank you for playing! Your stats have been saved.")
             save_stats_to_file(player_stats, 'hangman_stats.txt');
-            playing = false;
+            break; 
         case 'l'
-            disp('NOT DONE')
+            [filename, pathname] = uigetfile('*.txt', 'Select a stats file to load');
+            if isequal(filename,0)
+                disp('No file selected. Returning to main menu.');
+            else
+                fullpath = fullfile(pathname, filename);
+                player_stats = load_stats_from_file(fullpath);
+                disp('Player stats loaded successfully.');
+            end
+            % disp('NOT DONE')
         otherwise
             disp('Invalid choice. Please press "n", "l", or "e".')
     end
 end 
 
 % Display instructions
-disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'")
-disp("In this version (v1.0), the game will play after this message. You will have UNLIMITED guesses. To guess, type in any SINGLE ALPHABETIC character.")
-disp("You will WIN when you have guessed each letter in the hidden word, which will be revealed at the end.")
-fprintf("The word is currently: %s and it has %d letters in it.\n\n\n", cell2mat(revealed), length(revealed));
+% disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'")
+% disp("In this version (v1.0), the game will play after this message. You will have UNLIMITED guesses. To guess, type in any SINGLE ALPHABETIC character.")
+% disp("You will WIN when you have guessed each letter in the hidden word, which will be revealed at the end.")
+% fprintf("The word is currently: %s and it has %d letters in it.\n\n\n", cell2mat(revealed), length(revealed));
 
 function display_player_stats(player_stats)
     fprintf('\n--- PLAYER STATS ---\n');
@@ -99,6 +96,11 @@ function save_stats_to_file(player_stats, filename)
     fclose(fid);
 end
 
+% Definition definitions: 
+% HARD - 4 guesses, 0 hints.
+% MEDIUM - 5 guesses, 1 hint.
+% EASY - 6 guesses, 2 hints.
+% TOO EASY - 6 guesses, 6 hints.
 function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stats)
 %PLAY_HANGMAN_GAME Play a single game of Hangman and update stats
 
@@ -107,12 +109,47 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
     revealed = repmat({'-'},1,length(word_to_guess));
     global ALPHABET;
 
+    % INITIAL GAME CONDITIONS 
     finished = false;
     won = false;
     guess_count = 0;
-    lives = 8;
-    hint_count = 999999;  % or set any initial number of hints
+    lives = 0;
+    hint_count = 0;  
     correct_guesses = {};
+    difficulty_selected = false;
+
+    % DIFFICULTY SELECTION
+    while ~difficulty_selected
+        disp('Select difficulty level:');
+        disp('1 = Too Easy');
+        disp('2 = Easy');
+        disp('3 = Medium');
+        disp('4 = Hard');
+        
+        user_input = input('Enter the number corresponding to your choice: ', 's');
+        difficulty = str2double(user_input);  % convert string to number
+        
+        if ~isnan(difficulty) && ismember(difficulty, [1,2,3,4])
+            difficulty_selected = true;
+        else
+            disp('Invalid choice. Please enter 1, 2, 3, or 4.');
+        end
+    end
+    switch difficulty
+        case 1  % Too Easy
+            lives = 6;
+            hint_count = 10;
+        case 2  % Easy
+            lives = 6;
+            hint_count = 2;
+        case 3  % Medium
+            lives = 5;
+            hint_count = 1;
+        case 4  % Hard
+            lives = 4;
+            hint_count = 0;
+    end
+
 
     fprintf('\nNew game started! The word has %d letters.\n', length(word_to_guess));
     
@@ -128,18 +165,22 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
         disp(HANGMAN_STAGES{guess_count+1});
         
         % --- Hint ---
-        wants_hint = input("Would you like to use one of your " + hint_count + " hint(s)? Type ANYTHING into the input box for yes, leave empty otherwise. ", 's');
-        if ~isempty(wants_hint)
-            hint_count = hint_count - 1;
-            index = find(strcmp(revealed,'-'), 1);
-            revealed{index} = word_to_guess(index);
-        
-            if strcmp([revealed{:}], word_to_guess)
-                finished = true;
-                won = true;
-                continue;
-            else
-                fprintf("You have just used ONE hint. The letter revealed was '%s'. You have %d hints left.\n", revealed{index}, hint_count);
+        if hint_count <= 0
+            disp("You have no more hints left.")
+        else
+            wants_hint = input("Would you like to use one of your " + hint_count + " hint(s)? Type ANYTHING into the input box for yes, leave empty otherwise. ", 's');
+            if ~isempty(wants_hint)
+                hint_count = hint_count - 1;
+                index = find(strcmp(revealed,'-'), 1);
+                revealed{index} = word_to_guess(index);
+            
+                if strcmp([revealed{:}], word_to_guess)
+                    finished = true;
+                    won = true;
+                    continue;
+                else
+                    fprintf("You have just used ONE hint. The letter revealed was '%s'. You have %d hints left.\n", revealed{index}, hint_count);
+                end
             end
         end
         
@@ -205,4 +246,73 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
         player_stats.shortest_word = word_to_guess;
     end
     
+end
+
+
+function player_stats = load_stats_from_file(filename)
+%LOAD_STATS_FROM_FILE Load Hangman player stats from a text file safely
+%   Returns a valid player_stats structure even if the file is invalid.
+
+    % Initialize default stats
+    player_stats = init_player_stats();  
+
+    % Check if file exists
+    if ~isfile(filename)
+        warning('File does not exist. Returning default stats.');
+        return
+    end
+
+    fid = fopen(filename, 'r');
+    if fid == -1
+        warning('Cannot open file: %s. Returning default stats.', filename);
+        return
+    end
+
+    try
+        while ~feof(fid)
+            line = fgetl(fid);
+            if ~ischar(line), continue; end
+            parts = strsplit(line, ',');
+            if numel(parts) ~= 2, continue; end
+            
+            key = strtrim(parts{1});
+            value = strtrim(parts{2});
+            
+            % Assign values safely
+            switch key
+                case 'games_played'
+                    val = str2double(value);
+                    if ~isnan(val), player_stats.games_played = val; end
+                case 'games_won'
+                    val = str2double(value);
+                    if ~isnan(val), player_stats.games_won = val; end
+                case 'games_lost'
+                    val = str2double(value);
+                    if ~isnan(val), player_stats.games_lost = val; end
+                case 'correct_guesses'
+                    val = str2double(value);
+                    if ~isnan(val), player_stats.correct_guesses = val; end
+                case 'wrong_guesses'
+                    val = str2double(value);
+                    if ~isnan(val), player_stats.wrong_guesses = val; end
+                case 'longest_word'
+                    player_stats.longest_word = value;
+                case 'shortest_word'
+                    player_stats.shortest_word = value;
+                case 'least_guesses_to_win'
+                    val = str2double(value);
+                    if ~isnan(val), player_stats.least_guesses_to_win = val; end
+                case 'most_guesses_to_win'
+                    val = str2double(value);
+                    if ~isnan(val), player_stats.most_guesses_to_win = val; end
+                otherwise
+                    % Ignore unknown keys
+            end
+        end
+    catch ME
+        warning('Error reading file: %s. Returning default stats.', ME.message);
+        player_stats = init_player_stats();  % reset to defaults
+    end
+
+    fclose(fid);
 end
