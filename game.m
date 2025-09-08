@@ -1,8 +1,22 @@
-% Version 2
-% Main idea for this part of the project was to add hints, lives, hangman
-% stages in ascii art, more modular win conditions, etc... 
-% 
+% Version 3
+% In the final stage of this project it is becoming much more complex.
+% Instead of having the game logic in one consolidated loop, we are instead
+% going to allow the player to run unlimited games. The players statistics
+% will be recorded, including, but not limited to:
+% - Games won
+% - Games lost
+% - W/L Ratio
+% - Guesses Correct
+% - guesses wrong
+% - correct/wrong ratio
+% - longest word played
+% - shortest word played
+% - least guesses to win z
+% - most guesses to win
+% all of these will also be able to be saved to a file, which can be loaded
+% each time the game is started. 
 
+clc; clear; % clear terminal
 % CONSTANTS
 WORD_LIST = word_list(); % get the word list from the word list array 
 word_to_guess = WORD_LIST{randi(numel(WORD_LIST))}; % select a random word from the word list to act as our goal for the user
@@ -10,11 +24,12 @@ revealed = {'-', '-', '-', '-', '-', '-'};
 ALPHABET = {'a','b','c','d','e','f','g','h','i','j','k','l','m', ...
             'n','o','p','q','r','s','t','u','v','w','x','y','z'};
 HANGMAN_STAGES = hangman_stages();
+player_stats = init_player_stats(); 
 
 % GAME CONDITIONS 
 finished = false; 
 won = false;
-
+playing = true;
 
 % PLAYER STATS
 guess_count = 0; 
@@ -22,6 +37,27 @@ lives = 8;
 hint_count = 999999;
 initial_hints = hint_count; 
 correct_guesses = {};
+
+while playing
+    disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'");
+    disp('Press "n" to start a NEW game');
+    disp('Press "s" to VIEW stats');
+    disp('Press "l" to LOAD saved data from a .txt file. (TODO)')
+    disp('Press "e" to EXIT');
+    choice("Please enter your choice.", 's');
+
+    switch lower(choice)
+        case 'n'
+        case 's'
+        case 'e'
+            disp("Thank you for playing! Your stats have been saved.")
+            playing = true;
+        case 'l'
+            disp('NOT DONE')
+        otherwise
+            disp('Invalid choice. Please press "n", "l", or "e".')
+    end
+end 
 
 % Display instructions
 disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'")
@@ -93,4 +129,20 @@ if won
     disp("Congratulations! You WON! You took " + guess_count + " guess(es). The word was " + word_to_guess + ".")
 else
     disp("Sorry! You lost. The word was " + word_to_guess + ".")
+end
+
+% Save stats to file for loading in later sessions
+function save_stats_to_file(player_stats, filename)
+    fid = fopen(filename, 'w');
+    if fid == -1, error('Cannot open file for writing.'); end % fid == -1 means we couldn't open the file
+    fprintf(fid, 'games_played,%d\n', player_stats.games_played);
+    fprintf(fid, 'games_won,%d\n', player_stats.games_won);
+    fprintf(fid, 'games_lost,%d\n', player_stats.games_lost);
+    fprintf(fid, 'correct_guesses,%d\n', player_stats.correct_guesses);
+    fprintf(fid, 'wrong_guesses,%d\n', player_stats.wrong_guesses);
+    fprintf(fid, 'longest_word,%s\n', player_stats.longest_word);
+    fprintf(fid, 'shortest_word,%s\n', player_stats.shortest_word);
+    fprintf(fid, 'least_guesses_to_win,%d\n', player_stats.least_guesses_to_win);
+    fprintf(fid, 'most_guesses_to_win,%d\n', player_stats.most_guesses_to_win);
+    fclose(fid);
 end
