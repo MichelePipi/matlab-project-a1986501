@@ -1,20 +1,5 @@
-% Version 3
-% In the final stage of this project it is becoming much more complex.
-% Instead of having the game logic in one consolidated loop, we are instead
-% going to allow the player to run unlimited games. The players statistics
-% will be recorded, including, but not limited to:
-% - Games won
-% - Games lost
-% - W/L Ratio
-% - Guesses Correct
-% - guesses wrong
-% - correct/wrong ratio
-% - longest word played
-% - shortest word played
-% - least guesses to win z
-% - most guesses to win
-% all of these will also be able to be saved to a file, which can be loaded
-% each time the game is started. 
+% Version 3 - FINAL VERSION
+% Hangman, created by a1986501 :)
 
 clc; clear; % clear terminal
 % CONSTANTS
@@ -167,17 +152,29 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
         
         % --- Hint ---
         if hint_count <= 0
-            disp("You have no more hints left.")
+            disp("You have no more hints left. Proceeding to make a guess.")
         else
             wants_hint = input("Would you like to use one of your " + hint_count + " hint(s)? Type ANYTHING into the input box for yes, leave empty otherwise. ", 's'); 
             if ~isempty(wants_hint) % if the user did not input anything 
                                     % then we want to use a hint (see the
                                     % line above this)
-                hint_count = hint_count - 1; 
-                index = find(strcmp(revealed,'-'), 1);
-                revealed{index} = word_to_guess(index);
+                hint_count = hint_count - 1; % no need to check if they 
+                                             % have enough guesses; see
+                                             % above.
+                index = find(strcmp(revealed,'-'), 1); % find the FIRST instance of 
+                                                       % a SCRAMBLED
+                                                       % LETTER. this is
+                                                       % the letter which
+                                                       % we will reveal.
+                revealed{index} = word_to_guess(index); % reveal the letter.
             
-                if strcmp([revealed{:}], word_to_guess)
+                if strcmp([revealed{:}], word_to_guess) % since this hint
+                                                        % could possibly
+                                                        % have been at the
+                                                        % end of the word,
+                                                        % we need to check
+                                                        % if this makes the
+                                                        % user win.
                     finished = true;
                     won = true;
                     continue;
