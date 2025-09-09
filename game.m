@@ -115,6 +115,7 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
     guess_count = 0;
     lives = 0;
     hint_count = 0;  
+    guesses = {};
     correct_guesses = {};
     difficulty_selected = false;
 
@@ -168,9 +169,11 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
         if hint_count <= 0
             disp("You have no more hints left.")
         else
-            wants_hint = input("Would you like to use one of your " + hint_count + " hint(s)? Type ANYTHING into the input box for yes, leave empty otherwise. ", 's');
-            if ~isempty(wants_hint)
-                hint_count = hint_count - 1;
+            wants_hint = input("Would you like to use one of your " + hint_count + " hint(s)? Type ANYTHING into the input box for yes, leave empty otherwise. ", 's'); 
+            if ~isempty(wants_hint) % if the user did not input anything 
+                                    % then we want to use a hint (see the
+                                    % line above this)
+                hint_count = hint_count - 1; 
                 index = find(strcmp(revealed,'-'), 1);
                 revealed{index} = word_to_guess(index);
             
@@ -190,48 +193,62 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
         made_guess = false;
         while ~made_guess
             guess = input("What are you going to guess? ", 's');
-            if ischar(guess) && isscalar(guess) && ismember(guess, ALPHABET)
-                made_guess = true;
+            if ischar(guess) && isscalar(guess) && ismember(guess, ALPHABET) % is the guess a SINGLE (isscalar) CHARACTER (ischar) and is this character a LETTER (ismember).
+                if ismember(guess,guesses) % if so, has this guess already been made?
+                    disp("Sorry, it seems like you have guessed that letter already.") % make them guess again.
+                else % otherwise, if they have not made this guess yet
+                    made_guess = true; % we should set the flag to true so we break out this loop.
+                end
             else
                 disp("Sorry, that doesn't seem right. Make sure you are entering a LOWERCASE ALPHABETIC character ('a', 'b', etc...)");
             end
         end
         
+        guesses{end+1} = guess; % we need this to prevent repeat guesses
         guess_count = guess_count + 1;
         good_guess = false;
         guess = convertStringsToChars(guess);
         
-        for i = 1:strlength(word_to_guess)
-            if guess == word_to_guess(i)
-                revealed{i} = word_to_guess(i);
-                correct_guesses{end+1} = guess;
-                good_guess = true;
+        for i = 1:strlength(word_to_guess) % loop once for each letter in the word to guess
+            if guess == word_to_guess(i) % if the guess is the same as the ith letter
+                revealed{i} = word_to_guess(i); % then set this element in the revealed array to the letter, so we can
+                                                % begin displaying it to
+                                                % the user
+                correct_guesses{end+1} = guess; % add the correct guesses to the 
+                                                % guess list.
+                good_guess = true; % this is for later, when decrementing lives.
             end
         end
         
-        if ~good_guess
+        if ~good_guess % see above. did the guess NOT reveal anything?
             disp("Your guess did not reveal anything.")
             lives = lives - 1; 
         end
         
-        if strcmp([revealed{:}], word_to_guess)
+        if strcmp([revealed{:}], word_to_guess) %revealed{:} finds the revealed string, and strcmp returns true if the given strings aare the same.
+                                                % i.e, if the revealed
+                                                % string and the word to
+                                                % guess strings are the
+                                                % same, this must mean the
+                                                % player has guessed all
+                                                % letters in the word.
             finished = true;
             won = true;
-            continue;
+            continue; % skip to the next iteration of the loop, which will in turn break us out of it as the flag is now true.
         end
     end
     
     %% --- Update Player Stats ---
     player_stats.games_played = player_stats.games_played + 1;
     
-    if won
+    if won % self-explanatory; did the player win?
         fprintf("Congratulations, you WON! You used %d guess(es) and %d hint(s). The word was %s.\n", guess_count, hint_count, word_to_guess);
-        player_stats.games_won = player_stats.games_won + 1;
-        player_stats.least_guesses_to_win = min(player_stats.least_guesses_to_win, guess_count);
-        player_stats.most_guesses_to_win = max(player_stats.most_guesses_to_win, guess_count);
-    else
+        player_stats.games_won = player_stats.games_won + 1; % increment their win count 
+        player_stats.least_guesses_to_win = min(player_stats.least_guesses_to_win, guess_count); % use the min(a, b) function to determine whether they used less guesses than the current lowest guess count to win.
+        player_stats.most_guesses_to_win = max(player_stats.most_guesses_to_win, guess_count); % same as above.
+    else % again, self-explanatory. did the player lose?
         disp("Sorry! You lost. The word was " + word_to_guess + ".");
-        player_stats.games_lost = player_stats.games_lost + 1;
+        player_stats.games_lost = player_stats.games_lost + 1; % increment their loss count
     end
     
     % Update guesses stats
@@ -262,14 +279,21 @@ function player_stats = load_stats_from_file(filename)
         return
     end
 
-    fid = fopen(filename, 'r');
-    if fid == -1
+    fid = fopen(filename, 'r'); % from https://au.mathworks.com/help/matlab/ref/fopen.html:
+                                % fopen simply opens the file we want to
+                                % read in read mode ('r'). fid returns -1
+                                % if there was an error.
+    if fid == -1                % that is why we are checking whether fid is -1 here <-.
         warning('Cannot open file: %s. Returning default stats.', filename);
         return
     end
 
     try
-        while ~feof(fid)
+        while ~feof(fid) % according to matlab docs (https://au.mathworks.com/help/matlab/ref/feof.html), 
+                         % the feof file tests whether we are at the end of
+                         % a file. therefore, while ~feof(fid) means we are
+                         % going to run the following code until we are at
+                         % the end of the file.
             line = fgetl(fid);
             if ~ischar(line), continue; end
             parts = strsplit(line, ',');
@@ -277,42 +301,84 @@ function player_stats = load_stats_from_file(filename)
             
             key = strtrim(parts{1});
             value = strtrim(parts{2});
+            % Initialize flag
+            all_values_found = true;
             
-            % Assign values safely
+            % Assign values safely. here, we are assuming that the file
+            % contains the correct information in the correct fields.
             switch key
-                case 'games_played'
-                    val = str2double(value);
-                    if ~isnan(val), player_stats.games_played = val; end
+                case 'games_played' % the logic here will only be explained once as it is 
+                                    % the same for each value.
+                    val = str2double(value); 
+                    if ~isnan(val) % is the value we want a number?
+                        player_stats.games_played = val; % set it to the corresponding value.
+                    else % if it is not a number
+                        all_values_found = false; % chance our flag so we know to alert the user.
+                    end
                 case 'games_won'
-                    val = str2double(value);
-                    if ~isnan(val), player_stats.games_won = val; end
+                    val = str2double(value); % same logic here...
+                    if ~isnan(val)
+                        player_stats.games_won = val;
+                    else
+                        all_values_found = false;
+                    end
                 case 'games_lost'
                     val = str2double(value);
-                    if ~isnan(val), player_stats.games_lost = val; end
+                    if ~isnan(val)
+                        player_stats.games_lost = val;
+                    else
+                        all_values_found = false;
+                    end
                 case 'correct_guesses'
                     val = str2double(value);
-                    if ~isnan(val), player_stats.correct_guesses = val; end
+                    if ~isnan(val)
+                        player_stats.correct_guesses = val;
+                    else
+                        all_values_found = false;
+                    end
                 case 'wrong_guesses'
                     val = str2double(value);
-                    if ~isnan(val), player_stats.wrong_guesses = val; end
+                    if ~isnan(val)
+                        player_stats.wrong_guesses = val;
+                    else
+                        all_values_found = false;
+                    end
                 case 'longest_word'
                     player_stats.longest_word = value;
                 case 'shortest_word'
                     player_stats.shortest_word = value;
                 case 'least_guesses_to_win'
                     val = str2double(value);
-                    if ~isnan(val), player_stats.least_guesses_to_win = val; end
+                    if ~isnan(val)
+                        player_stats.least_guesses_to_win = val;
+                    else
+                        all_values_found = false;
+                    end
                 case 'most_guesses_to_win'
                     val = str2double(value);
-                    if ~isnan(val), player_stats.most_guesses_to_win = val; end
+                    if ~isnan(val)
+                        player_stats.most_guesses_to_win = val;
+                    else
+                        all_values_found = false;
+                    end
                 otherwise
                     % Ignore unknown keys
             end
         end
-    catch ME
+        % To make the game more user-friendly, the all_values_found flag
+        % will be checked and if it is not 'true', then we should send an
+        % error message to the user.
+        if ~all_values_found:
+            disp("There was an error while loading some of your stats. Default values were inserted instead.")
+        end
+    catch ME % from https://au.mathworks.com/help/matlab/ref/mexception.html: any matlab code which throws
+             % an error throws an ME; a MException object. so in case of
+             % any errors occur while reading the values, we should stop
+             % immediately and set the player stats to dummy values, as
+             % well as tell the user. 
         warning('Error reading file: %s. Returning default stats.', ME.message);
         player_stats = init_player_stats();  % reset to defaults
     end
 
-    fclose(fid);
+    fclose(fid); % close the file to prevent issues
 end
