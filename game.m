@@ -4,17 +4,17 @@
 clc; clear; % clear terminal
 % CONSTANTS
 WORD_LIST = word_list(); % get the word list from the word list array 
-word_to_guess = WORD_LIST{randi(numel(WORD_LIST))}; % select a random word from the word list to act as our goal for the user
-% revealed = {'-', '-', '-', '-', '-', '-'};
+word_to_guess = WORD_LIST{randi(numel(WORD_LIST))}; % select a random word from the word list to act as our goal for the user. randi() = random integer, numel() = number of array elements.
 global ALPHABET 
 ALPHABET = {'a','b','c','d','e','f','g','h','i','j','k','l','m', ...
             'n','o','p','q','r','s','t','u','v','w','x','y','z'};
-HANGMAN_STAGES = hangman_stages(); 
-player_stats = init_player_stats(); 
-playing = true;
+HANGMAN_STAGES = hangman_stages(); % see: hangman_stages.m
+player_stats = init_player_stats();  % see: init_player_stats.m
+playing = true; % initialise the playing flag so we can begin the main game loop
 
 disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'"); % welcome message
 
+% MAIN GAME LOOP
 while playing
     disp('Press "n" to start a NEW game');
     disp('Press "s" to VIEW stats');
@@ -27,21 +27,25 @@ while playing
             % we've encapsulated the game into its own function, which
             % returns a new version of player stats, so we can just call
             % that here:
-            player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stats);
-        case 's'
+            player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stats); % nice and simple.
+        case 's' 
             display_player_stats(player_stats);
         case 'e'
-            disp("Thank you for playing! Your stats have been saved.")
-            save_stats_to_file(player_stats, 'hangman_stats.txt');
+            disp("Thank you for playing! Your stats have been saved.") 
+            save_stats_to_file(player_stats, 'hangman_stats.txt'); % see the function definition at the end of this file. 
             break; 
         case 'l'
-            [filename, pathname] = uigetfile('*.txt', 'Select a stats file to load');
-            if isequal(filename,0)
-                disp('No file selected. Returning to main menu.');
-            else
+            [filename, pathname] = uigetfile('*.txt', 'Select a stats file to load'); % sese matlab docs: https://au.mathworks.com/help/matlab/ref/uigetfile.html
+                                                                                      %uigetfile has many definitions for multiple outputs. in this case, we want the
+                                                                                      % file name and pathname of the file we want to load, so we call that instance here.
+            if isequal(filename,0) % did the user select nothing?
+                disp('No file selected. Returning to main menu.'); 
+            else % if the user *did* select something, we want its path, and the stats loaded.
                 fullpath = fullfile(pathname, filename);
                 player_stats = load_stats_from_file(fullpath);
-                disp('Player stats loaded successfully.');
+                % disp('Player stats loaded successfully.'); redundant.
+                % possible it fails to load which is handled in that
+                % function now.
             end
             % disp('NOT DONE')
         otherwise
@@ -91,10 +95,15 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
 
     % --- Initialize game variables ---
     word_to_guess = WORD_LIST{randi(numel(WORD_LIST))};
-    revealed = repmat({'-'},1,length(word_to_guess));
-    global ALPHABET;
+    revealed = repmat({'-'},1,length(word_to_guess)); % repmat = repeat matrix, so we're just repeating the single-element
+    %                                                    matrix {'-'} N times, where N is the length of the word the user is guessing
+    global ALPHABET; % this allows the ALPHABET variable to be used.
 
     % INITIAL GAME CONDITIONS 
+    % notice that in earlier versions of the game this used to be in the
+    % definition outside of the loop. this is because this logic was for
+    % only playing one game, but for each subsequent game all variables
+    % need to be reset to ensure fairness and continuity. 
     finished = false;
     won = false;
     guess_count = 0;
@@ -115,13 +124,13 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
         user_input = input('Enter the number corresponding to your choice: ', 's');
         difficulty = str2double(user_input);  % convert string to number
         
-        if ~isnan(difficulty) && ismember(difficulty, [1,2,3,4])
-            difficulty_selected = true;
+        if ~isnan(difficulty) && ismember(difficulty, [1,2,3,4]) % is the difficulty a number, and is either 1,2,3 or 4? 
+            difficulty_selected = true; % we can leave this loop. 
         else
             disp('Invalid choice. Please enter 1, 2, 3, or 4.');
         end
     end
-    switch difficulty
+    switch difficulty % switch statement to set up the lives and hint count vars.
         case 1  % Too Easy
             lives = 6;
             hint_count = 10;
@@ -136,13 +145,14 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
             hint_count = 0;
     end
 
-
     fprintf('\nNew game started! The word has %d letters.\n', length(word_to_guess));
     
     %% --- Main Game Loop ---
     while ~finished
         if lives <= 0
-            finished = true;
+            finished = true; % win is false until the player wins, so nothing else needs to be done 
+                             % here other than force a new iteration of the loop (continue) which will 
+                             % obviously break us out as finishted is now true, and then the outputs will occur later.
             continue;
         end
         
@@ -291,12 +301,12 @@ function player_stats = load_stats_from_file(filename)
                          % a file. therefore, while ~feof(fid) means we are
                          % going to run the following code until we are at
                          % the end of the file.
-            line = fgetl(fid);
-            if ~ischar(line), continue; end
-            parts = strsplit(line, ',');
-            if numel(parts) ~= 2, continue; end
+            line = fgetl(fid); % get the current line... (fgetl = get line from file)
+            if ~ischar(line), continue; end  % if the line isnt a character array then skip the rest of the loop
+            parts = strsplit(line, ','); % thus if it is a char array split each part seperated by ',' (see the hangman_stats.txt file for more info)
+            if numel(parts) ~= 2, continue; end % if there isnt 2 elements then something went awry!
             
-            key = strtrim(parts{1});
+            key = strtrim(parts{1}); 
             value = strtrim(parts{2});
             % Initialize flag
             all_values_found = true;
@@ -365,7 +375,7 @@ function player_stats = load_stats_from_file(filename)
         % To make the game more user-friendly, the all_values_found flag
         % will be checked and if it is not 'true', then we should send an
         % error message to the user.
-        if ~all_values_found:
+        if ~all_values_found
             disp("There was an error while loading some of your stats. Default values were inserted instead.")
         end
     catch ME % from https://au.mathworks.com/help/matlab/ref/mexception.html: any matlab code which throws
