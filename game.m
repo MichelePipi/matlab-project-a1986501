@@ -10,6 +10,7 @@ ALPHABET = {'a','b','c','d','e','f','g','h','i','j','k','l','m', ...
             'n','o','p','q','r','s','t','u','v','w','x','y','z'};
 HANGMAN_STAGES = hangman_stages(); % see: hangman_stages.m
 player_stats = init_player_stats();  % see: init_player_stats.m
+words_played = {}; % Set up so we prevent repeated words
 playing = true; % initialise the playing flag so we can begin the main game loop
 
 disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'"); % welcome message
@@ -18,7 +19,7 @@ disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'"); % we
 while playing
     disp('Press "n" to start a NEW game');
     disp('Press "s" to VIEW stats');
-    disp('Press "l" to LOAD saved data from a .txt file. (TODO)')
+    disp('Press "l" to LOAD saved data from a .txt file.')
     disp('Press "e" to EXIT');
     choice = input("Please enter your choice: ", 's');
 
@@ -94,16 +95,32 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
 %PLAY_HANGMAN_GAME Play a single game of Hangman and update stats
 
     % --- Initialize game variables ---
-    word_to_guess = WORD_LIST{randi(numel(WORD_LIST))};
+    % PICK WORD TO GUESS
+    word_chosen = false;
+    global words_played; 
+    if numel(words_played) == numel(WORD_LIST) && all(ismember(WORD_LIST, words_played)) % if words_played is the same size as WORD_LIST, 
+                                                                                        %  and all the elements of word_list are in words_played, 
+                                                                                        %  we can conclude that every word has been played.
+        words_played = {}; % reset the word list if the player has used all 1000 words.
+        disp('It looks like you have used every single word! Resetting...');
+    end
+    while ~word_chosen
+        word_to_guess = WORD_LIST{randi(numel(WORD_LIST))};
+        if ~ismember(word_to_guess,words_played)
+            word_chosen = true;
+            words_played{end+1} = word_to_guess;
+            % disp(words_played);
+        end
+    end
     revealed = repmat({'-'},1,length(word_to_guess)); % repmat = repeat matrix, so we're just repeating the single-element
     %                                                    matrix {'-'} N times, where N is the length of the word the user is guessing
-    global ALPHABET; % this allows the ALPHABET variable to be used.
 
     % INITIAL GAME CONDITIONS 
     % notice that in earlier versions of the game this used to be in the
     % definition outside of the loop. this is because this logic was for
     % only playing one game, but for each subsequent game all variables
     % need to be reset to ensure fairness and continuity. 
+    global ALPHABET; % this allows the ALPHABET variable to be used.
     finished = false;
     won = false;
     guess_count = 0;
@@ -355,8 +372,11 @@ function player_stats = load_stats_from_file(filename)
                 case 'shortest_word'
                     player_stats.shortest_word = value;
                 case 'least_guesses_to_win'
-                    val = str2double(value);
+                    val = str2double(value); 
                     if ~isnan(val)
+                        if val == Inf
+                            player_stats.least_guesses_to_win = 'N/A';
+                        end
                         player_stats.least_guesses_to_win = val;
                     else
                         all_values_found = false;

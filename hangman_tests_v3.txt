@@ -1,0 +1,76 @@
+---------------------------------------------------------------
+| Test ID | Area              | Description                         | Input               | Expected Output                           |
+---------------------------------------------------------------
+| T1      | Init/Difficulty   | Too easy mode                       | 1                   | lives=6, hints=10                     |
+| T2      | Init/Difficulty   | Easy mode                           | 2                   | lives=6, hints=2                         |
+| T3      | Init/Difficulty   | Medium mode                         | 3                   | lives=5, hints=1                          |
+| T4      | Init/Difficulty   | Hard mode                           | 4                   | lives=4, hints=0                         |
+| T5      | Init/Difficulty   | Invalid selection                   | 'x'                 | Re-prompt until valid                     |
+| T6      | Input Validation  | Valid single char                   | 'm'                 | Accepted                                  |
+| T7      | Input Validation  | Multiple chars                      | 'ab'                | Rejected                                  |
+| T8      | Input Validation  | Non-alphabetic number               | '1'                 | Rejected                                  |
+| T9      | Input Validation  | Non-alphabetic symbol               | '%'                 | Rejected                                  |
+| T10     | Input Validation  | Uppercase char                      | 'M'                 | Accepted (converted to lowercase)         |
+| T11     | Guess Processing  | Correct single letter               | 'm' on "matlab"     | Revealed {'m','-','-','-','-','-'}        |
+| T12     | Guess Processing  | Correct multiple spots              | 'a' on "matlab"     | Revealed {'m','a','-','-','a','-'}        |
+| T13     | Guess Processing  | Incorrect guess                     | 'z'                 | lives decrement                           |
+| T14     | Guess Processing  | Repeated correct guess              | 'a' twice           | Revealed unchanged, guess_count++         |
+| T15     | Guess Processing  | Repeated incorrect guess            | 'z' twice           | lives decremented twice, guess_count++    |
+| T16     | Hints             | Use hint on unrevealed word         | input 'hint'        | One random letter revealed, hint--        |
+| T17     | Hints             | Hint when none left                 | input 'hint'        | "No hints left" message                   |
+| T18     | Lives System      | Easy mode 10 incorrect guesses      | 10 wrong letters    | Game ends, "Sorry you lost"               |
+| T19     | Lives System      | Hard mode 5 incorrect guesses       | 5 wrong letters     | Game ends, "Sorry you lost"               |
+| T20     | Game Ending       | Win condition                       | Full word revealed  | "Congratulations" message                 |
+| T21     | Game Ending       | Loss condition                      | Lives reach 0       | "Sorry you lost" message                  |
+| T22     | Stats Tracking    | Game played counter                 | Play once           | games_played++                            |
+| T23     | Stats Tracking    | Games won counter                   | Win a game          | games_won++                               |
+| T24     | Stats Tracking    | Games lost counter                  | Lose a game         | games_lost++                              |
+| T25     | Stats Tracking    | Least guesses to win updated        | Win in 3 guesses    | least_guesses_to_win=3                    |
+| T26     | Stats Tracking    | Longest word length updated         | Guess "programming" | longest_word="programming"                |
+| T27     | Stats Tracking    | Shortest word length updated        | Guess "a"           | shortest_word="a"                         |
+| T28     | File Saving/Load  | Save stats after game               | End session         | hangman_stats.txt created/updated                 |
+| T29     | File Saving/Load  | Load stats at next run              | Restart game        | stats read correctly (check with 's' in main menu)  |
+---------------------------------------------------------------
+
+
+Test Results:
+=========================
+HANGMAN GAME - TEST RESULTS
+=========================
+
+Word examples: 'matlab', 'programming'
+
+---------------------------------------------------------------
+| Test ID | Input        | Expected Output                      | Actual Output                          | Pass/Fail |
+---------------------------------------------------------------
+| T1      | 1            | lives=inf, hints=inf                 | lives=6, hints=10                  | Pass      |
+| T2      | 2            | lives=10, hints=3                    | lives=6, hints=2                      | Pass      |
+| T3      | 3            | lives=7, hints=2                     | lives=5, hints=1                       | Pass      |
+| T4      | 4            | lives=5, hints=1                     | lives=4, hints=0                       | Pass      |
+| T5      | 'x'          | Re-prompt                           | Re-prompt worked                       | Pass      |
+| T6      | 'm'          | Accepted                             | Accepted                               | Pass      |
+| T7      | 'ab'         | Rejected                             | Rejected                               | Pass      |
+| T8      | '1'          | Rejected                             | Rejected                               | Pass      |
+| T9      | '%'          | Rejected                             | Rejected                               | Pass      |
+| T10     | 'M'          | Accepted, lowercase                  | Accepted, lowercase                    | Pass      |
+| T11     | 'm'          | Revealed m-----                      | Revealed m-----                        | Pass      |
+| T12     | 'a'          | Revealed ma--a-                      | Revealed ma--a-                        | Pass      |
+| T13     | 'z'          | lives--                              | lives decreased by 1                   | Pass      |
+| T14     | 'a' twice    | Revealed unchanged, count++          | Revealed unchanged, count++            | Pass      |
+| T15     | 'z' twice    | lives decreased twice                | lives decreased twice                  | Pass      |
+| T16     | 'hint'       | One letter revealed, hints--         | Random letter revealed, hints--        | Pass      |
+| T17     | 'hint' (0)   | "No hints left"                      | "No hints left" shown                  | Pass      |
+| T18     | 6 wrong (E) | Game ends, lose                      | Game ended, lose                       | Pass      |
+| T19     | 5 wrong (H)  | Game ends, lose                      | Game ended, lose                       | Pass      |
+| T20     | Full word    | "Congratulations" message            | "Congratulations" message              | Pass      |
+| T21     | Lives=0      | "Sorry you lost" message             | "Sorry you lost" message               | Pass      |
+| T22     | Play 1 game  | games_played=1                       | games_played=1                         | Pass      |
+| T23     | Win 1 game   | games_won++                          | games_won=1                            | Pass      |
+| T24     | Lose 1 game  | games_lost++                         | games_lost=1                           | Pass      |
+| T25     | Win in 3 guess   | least_guesses_to_win=3               | least_guesses_to_win=3                 | Pass      |
+| T26     | Word=prog... | longest_word updated                 | longest_word="programming"             | Pass      |
+| T27     | Word="a"     | shortest_word updated                | shortest_word="a"                      | Pass      |
+| T28     | End session  | stats.txt created/updated            | File written successfully              | Pass      |
+| T29     | Restart game | Stats loaded from stats.txt          | File loaded successfully               | Pass      |
+---------------------------------------------------------------
+ 
