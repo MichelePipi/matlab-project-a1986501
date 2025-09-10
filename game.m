@@ -1,4 +1,4 @@
-% Version 3 - FINAL VERSION
+%Version 3 - FINAL VERSION
 % Hangman, created by a1986501 :)
 
 clc; clear; % clear terminal
@@ -19,6 +19,7 @@ disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'"); % we
 
 %% MAIN MENU LOOP
 while playing
+    disp('Press "i" to for INSTRUCTIONS.')
     disp('Press "n" to start a NEW game');
     disp('Press "s" to VIEW stats');
     disp('Press "l" to LOAD saved data from a .txt file.');
@@ -26,6 +27,10 @@ while playing
     choice = input("Please enter your choice: ", 's');
 
     switch lower(choice) % lowercase version of choice to handle the case where choice ='N' which is still valid.
+        case 'i'
+            disp("In this game, you have a set amount of guesses to guess a randomly selected word. In each difficulty, you will receive a certain amount of hints and lives, traditionally decreasing as you increase the difficulty.")
+            disp("When you make a CORRECT guess, your lives will not decrease; i.e, incorrect guesses will decrease your lives.")
+            disp("If you are stuck, hints are also available, which can be accessed by typing anything into the input box when required. Good luck!")
         case 'n'
             % we've encapsulated the game into its own function, which
             % returns a new version of player stats, so we can just call
@@ -92,11 +97,13 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
     won = false;
     guess_count = 0;
     lives = 0;
+    initial_lives = 0;
     hint_count = 0;  
+    max_hints = 0;
     guesses = {};
     correct_guesses = {};
     difficulty_selected = false;
-
+    disp(word_to_guess);
     % DIFFICULTY SELECTION
     while ~difficulty_selected
         disp('Select difficulty level:');
@@ -118,19 +125,29 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
     switch difficulty % switch statement to set up the lives and hint count vars.
         case 1  % Too Easy
             lives = 6;
+            initial_lives = 6;
             hint_count = 6;
+            max_hints = 6;
         case 2  % Easy
             lives = 6;
+            initial_lives = 6;
             hint_count = 2;
+            max_hints = 2;
         case 3  % Medium
             lives = 5;
+            initial_lives = 5;
             hint_count = 1;
+            max_hints = 1;
         case 4  % Hard
             lives = 4;
+            initial_lives = 4;
             hint_count = 1;
+            max_hints = 1;
         case 5 % Impossible
             lives = 2;
+            initial_lives = 2;
             hint_count = 2;
+            max_hints = 2;
     end
 
     fprintf('\nNew game started! The word has %d letters.\n', length(word_to_guess));
@@ -147,7 +164,7 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
         fprintf("You have currently made %d guess(es). %d/%d are correct. You have %d guesses left\n", ...
             guess_count, length(correct_guesses), guess_count, lives);
         fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
-        disp(HANGMAN_STAGES{guess_count+1});
+        disp(HANGMAN_STAGES{(initial_lives-lives)+1});
         
         % --- Hint ---
         if hint_count <= 0
@@ -238,7 +255,7 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
     player_stats.games_played = player_stats.games_played + 1;
     
     if won % self-explanatory; did the player win?
-        fprintf("Congratulations, you WON! You used %d guess(es) and %d hint(s). The word was %s.\n", guess_count, hint_count, word_to_guess);
+        fprintf("Congratulations, you WON! You used %d guess(es) and %d hint(s). The word was %s.\n", guess_count, (max_hints-hint_count), word_to_guess);
         player_stats.games_won = player_stats.games_won + 1; % increment their win count 
         player_stats.least_guesses_to_win = min(player_stats.least_guesses_to_win, guess_count); % use the min(a, b) function to determine whether they used less guesses than the current lowest guess count to win.
         player_stats.most_guesses_to_win = max(player_stats.most_guesses_to_win, guess_count); % same as above.
