@@ -104,7 +104,7 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
     correct_guesses = {};
     difficulty_selected = false;
     disp(word_to_guess);
-    % DIFFICULTY SELECTION
+    %% DIFFICULTY SELECTION
     while ~difficulty_selected
         disp('Select difficulty level:');
         disp('1 = Too Easy (6 Lives, 6 Hints)');
@@ -260,6 +260,7 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
         player_stats.least_guesses_to_win = min(player_stats.least_guesses_to_win, guess_count); % use the min(a, b) function to determine whether they used less guesses than the current lowest guess count to win.
         player_stats.most_guesses_to_win = max(player_stats.most_guesses_to_win, guess_count); % same as above.
     else % again, self-explanatory. did the player lose?
+        disp(HANGMAN_STAGES{end});
         disp("Sorry! You lost. The word was " + word_to_guess + ".");
         player_stats.games_lost = player_stats.games_lost + 1; % increment their loss count
     end

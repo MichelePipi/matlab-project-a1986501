@@ -1,9 +1,9 @@
-games_played,1
+games_played,2
 games_won,1
-games_lost,0
-correct_guesses,5
-wrong_guesses,1
-longest_word,trouble
-shortest_word,trouble
-least_guesses_to_win,6
-most_guesses_to_win,6
+games_lost,1
+correct_guesses,6
+wrong_guesses,5
+longest_word,exactly
+shortest_word,nature
+least_guesses_to_win,9
+most_guesses_to_win,9
