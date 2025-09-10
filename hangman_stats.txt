@@ -1,9 +1,9 @@
-games_played,1
-games_won,1
-games_lost,0
-correct_guesses,5
-wrong_guesses,3
-longest_word,pressure
-shortest_word,pressure
-least_guesses_to_win,8
+games_played,4
+games_won,2
+games_lost,2
+correct_guesses,11
+wrong_guesses,7
+longest_word,something
+shortest_word,wide
+least_guesses_to_win,5
 most_guesses_to_win,8

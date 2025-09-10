@@ -2,28 +2,30 @@
 % Hangman, created by a1986501 :)
 
 clc; clear; % clear terminal
-% CONSTANTS
+%% CONSTANTS
 WORD_LIST = word_list(); % get the word list from the word list array 
 word_to_guess = WORD_LIST{randi(numel(WORD_LIST))}; % select a random word from the word list to act as our goal for the user. randi() = random integer, numel() = number of array elements.
 global ALPHABET 
 ALPHABET = {'a','b','c','d','e','f','g','h','i','j','k','l','m', ...
             'n','o','p','q','r','s','t','u','v','w','x','y','z'};
-HANGMAN_STAGES = hangman_stages(); % see: hangman_stages.m
+HANGMAN_STAGES = hangman_stages(); % see: hangman_stages.m 
+
+%% PLAYER STATISTICS / GENERAL LOOP VARIABLES
 player_stats = init_player_stats();  % see: init_player_stats.m
 words_played = {}; % Set up so we prevent repeated words
 playing = true; % initialise the playing flag so we can begin the main game loop
 
 disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'"); % welcome message
 
-% MAIN GAME LOOP
+%% MAIN MENU LOOP
 while playing
     disp('Press "n" to start a NEW game');
     disp('Press "s" to VIEW stats');
-    disp('Press "l" to LOAD saved data from a .txt file.')
+    disp('Press "l" to LOAD saved data from a .txt file.');
     disp('Press "e" to EXIT');
     choice = input("Please enter your choice: ", 's');
 
-    switch lower(choice)
+    switch lower(choice) % lowercase version of choice to handle the case where choice ='N' which is still valid.
         case 'n'
             % we've encapsulated the game into its own function, which
             % returns a new version of player stats, so we can just call
@@ -36,17 +38,14 @@ while playing
             save_stats_to_file(player_stats, 'hangman_stats.txt'); % see the function definition at the end of this file. 
             break; 
         case 'l'
-            [filename, pathname] = uigetfile('*.txt', 'Select a stats file to load'); % sese matlab docs: https://au.mathworks.com/help/matlab/ref/uigetfile.html
-                                                                                      %uigetfile has many definitions for multiple outputs. in this case, we want the
+            [filename, pathname] = uigetfile('*.txt', 'Select a stats file to load'); % See matlab docs: https://au.mathworks.com/help/matlab/ref/uigetfile.html
+                                                                                      % uigetfile has many definitions for multiple outputs. in this case, we want the
                                                                                       % file name and pathname of the file we want to load, so we call that instance here.
             if isequal(filename,0) % did the user select nothing?
                 disp('No file selected. Returning to main menu.'); 
-            else % if the user *did* select something, we want its path, and the stats loaded.
-                fullpath = fullfile(pathname, filename);
+            else % if the user selected something, we want its path, and the stats loaded.
+                fullpath = fullfile(pathname, filename); 
                 player_stats = load_stats_from_file(fullpath);
-                % disp('Player stats loaded successfully.'); redundant.
-                % possible it fails to load which is handled in that
-                % function now.
             end
             % disp('NOT DONE')
         otherwise
@@ -54,45 +53,13 @@ while playing
     end
 end 
 
-% Display instructions
-% disp("Welcome to HANGMAN! Written by a1986501 for 'MATLAB & C; ENG1002.'")
-% disp("In this version (v1.0), the game will play after this message. You will have UNLIMITED guesses. To guess, type in any SINGLE ALPHABETIC character.")
-% disp("You will WIN when you have guessed each letter in the hidden word, which will be revealed at the end.")
-% fprintf("The word is currently: %s and it has %d letters in it.\n\n\n", cell2mat(revealed), length(revealed));
-
-function display_player_stats(player_stats)
-    fprintf('\n--- PLAYER STATS ---\n');
-    fprintf('Games Played: %d | Won: %d | Lost: %d\n', player_stats.games_played, player_stats.games_won, player_stats.games_lost);
-    fprintf('Correct Guesses: %d | Wrong Guesses: %d\n', player_stats.correct_guesses, player_stats.wrong_guesses);
-    fprintf('Longest Word: %s | Shortest Word: %s\n', player_stats.longest_word, player_stats.shortest_word);
-    fprintf('Least Guesses to Win: %d | Most Guesses to Win: %d\n', ...
-        player_stats.least_guesses_to_win, player_stats.most_guesses_to_win);
-    fprintf('-------------------\n\n');
-end
-
-% Save stats to file for loading in later sessions
-function save_stats_to_file(player_stats, filename)
-    fid = fopen(filename, 'w');
-    if fid == -1, error('Cannot open file for writing.'); end % fid == -1 means we couldn't open the file
-    fprintf(fid, 'games_played,%d\n', player_stats.games_played);
-    fprintf(fid, 'games_won,%d\n', player_stats.games_won);
-    fprintf(fid, 'games_lost,%d\n', player_stats.games_lost);
-    fprintf(fid, 'correct_guesses,%d\n', player_stats.correct_guesses);
-    fprintf(fid, 'wrong_guesses,%d\n', player_stats.wrong_guesses);
-    fprintf(fid, 'longest_word,%s\n', player_stats.longest_word);
-    fprintf(fid, 'shortest_word,%s\n', player_stats.shortest_word);
-    fprintf(fid, 'least_guesses_to_win,%d\n', player_stats.least_guesses_to_win);
-    fprintf(fid, 'most_guesses_to_win,%d\n', player_stats.most_guesses_to_win);
-    fclose(fid);
-end
-
 % Definition definitions: 
 % HARD - 4 guesses, 0 hints.
 % MEDIUM - 5 guesses, 1 hint.
 % EASY - 6 guesses, 2 hints.
 % TOO EASY - 6 guesses, 6 hints.
 function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stats)
-%PLAY_HANGMAN_GAME Play a single game of Hangman and update stats
+%% PLAY_HANGMAN_GAME Play a single game of Hangman and update stats
 
     % --- Initialize game variables ---
     % PICK WORD TO GUESS
@@ -104,9 +71,9 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
         words_played = {}; % reset the word list if the player has used all 1000 words.
         disp('It looks like you have used every single word! Resetting...');
     end
-    while ~word_chosen
-        word_to_guess = WORD_LIST{randi(numel(WORD_LIST))};
-        if ~ismember(word_to_guess,words_played)
+    while ~word_chosen % until we have chosen a suitable word 
+        word_to_guess = WORD_LIST{randi(numel(WORD_LIST))}; % pick a random word
+        if ~ismember(word_to_guess,words_played) % if we have not played it already then jump out the loop, otherwise keep picking words.
             word_chosen = true;
             words_played{end+1} = word_to_guess;
             % disp(words_played);
@@ -133,24 +100,25 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
     % DIFFICULTY SELECTION
     while ~difficulty_selected
         disp('Select difficulty level:');
-        disp('1 = Too Easy');
-        disp('2 = Easy');
-        disp('3 = Medium');
-        disp('4 = Hard');
+        disp('1 = Too Easy (6 Lives, 6 Hints)');
+        disp('2 = Easy (6 Lives, 2 Hints)');
+        disp('3 = Medium (5 Lives, 1 Hint)');
+        disp('4 = Hard (4 Lives, 1 Hint)');
+        disp('5 = Impossible (2 Lives, 2 Hints)')
         
         user_input = input('Enter the number corresponding to your choice: ', 's');
         difficulty = str2double(user_input);  % convert string to number
         
-        if ~isnan(difficulty) && ismember(difficulty, [1,2,3,4]) % is the difficulty a number, and is either 1,2,3 or 4? 
+        if ~isnan(difficulty) && ismember(difficulty, [1,2,3,4,5]) % is the difficulty a number, and is either 1,2,3 or 4? 
             difficulty_selected = true; % we can leave this loop. 
         else
-            disp('Invalid choice. Please enter 1, 2, 3, or 4.');
+            disp('Invalid choice. Please enter 1, 2, 3, 4, or 5.');
         end
     end
     switch difficulty % switch statement to set up the lives and hint count vars.
         case 1  % Too Easy
             lives = 6;
-            hint_count = 10;
+            hint_count = 6;
         case 2  % Easy
             lives = 6;
             hint_count = 2;
@@ -159,7 +127,10 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
             hint_count = 1;
         case 4  % Hard
             lives = 4;
-            hint_count = 0;
+            hint_count = 1;
+        case 5 % Impossible
+            lives = 2;
+            hint_count = 2;
     end
 
     fprintf('\nNew game started! The word has %d letters.\n', length(word_to_guess));
@@ -175,6 +146,7 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
         
         fprintf("You have currently made %d guess(es). %d/%d are correct. You have %d guesses left\n", ...
             guess_count, length(correct_guesses), guess_count, lives);
+        fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
         disp(HANGMAN_STAGES{guess_count+1});
         
         % --- Hint ---
@@ -207,13 +179,13 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
                     continue;
                 else
                     fprintf("You have just used ONE hint. The letter revealed was '%s'. You have %d hints left.\n", revealed{index}, hint_count);
+                    fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
                 end
             end
         end
+
         
-        fprintf("As it stands, the word is currently: %s\n", cell2mat(revealed));
-        
-        % --- Input Validation ---
+        %% --- Input Validation ---
         made_guess = false;
         while ~made_guess
             guess = input("What are you going to guess? ", 's');
@@ -259,8 +231,8 @@ function player_stats = play_hangman_game(WORD_LIST, HANGMAN_STAGES, player_stat
             finished = true;
             won = true;
             continue; % skip to the next iteration of the loop, which will in turn break us out of it as the flag is now true.
-        end
-    end
+        end 
+    end  
     
     %% --- Update Player Stats ---
     player_stats.games_played = player_stats.games_played + 1;
@@ -291,7 +263,7 @@ end
 
 
 function player_stats = load_stats_from_file(filename)
-%LOAD_STATS_FROM_FILE Load Hangman player stats from a text file safely
+%% LOAD_STATS_FROM_FILE Load Hangman player stats from a text file safely
 %   Returns a valid player_stats structure even if the file is invalid.
 
     % Initialize default stats
@@ -299,7 +271,9 @@ function player_stats = load_stats_from_file(filename)
 
     % Check if file exists
     if ~isfile(filename)
-        warning('File does not exist. Returning default stats.');
+        warning('File does not exist. Returning default stats.'); 
+        % we do not need to run init_player_stats(0 again because we just
+        % ran it...
         return
     end
 
@@ -308,7 +282,10 @@ function player_stats = load_stats_from_file(filename)
                                 % read in read mode ('r'). fid returns -1
                                 % if there was an error.
     if fid == -1                % that is why we are checking whether fid is -1 here <-.
-        warning('Cannot open file: %s. Returning default stats.', filename);
+        warning('Cannot open file: %s. Returning default stats.', filename); 
+        % this also handles whether the user has no permissions to read the
+        % file. it has been tested on a dummy file dummy.txt with chmod
+        % permissions 000.
         return
     end
 
@@ -328,6 +305,7 @@ function player_stats = load_stats_from_file(filename)
             % Initialize flag
             all_values_found = true;
             
+            %% Assign values to player stats.
             % Assign values safely. here, we are assuming that the file
             % contains the correct information in the correct fields.
             switch key
@@ -373,14 +351,16 @@ function player_stats = load_stats_from_file(filename)
                     player_stats.shortest_word = value;
                 case 'least_guesses_to_win'
                     val = str2double(value); 
-                    if ~isnan(val)
-                        if val == Inf
+                    if ~isnan(val) 
+                        if isinf(val) % this means the player has never had a successful game as by default it is set to Infinity.
                             player_stats.least_guesses_to_win = 'N/A';
+                        else
+                            player_stats.least_guesses_to_win = val;
                         end
-                        player_stats.least_guesses_to_win = val;
                     else
                         all_values_found = false;
                     end
+
                 case 'most_guesses_to_win'
                     val = str2double(value);
                     if ~isnan(val)
@@ -389,14 +369,24 @@ function player_stats = load_stats_from_file(filename)
                         all_values_found = false;
                     end
                 otherwise
-                    % Ignore unknown keys
+                    % We are also setting all_values_found to false in this
+                    % case. This is because in a perffect world, the stats
+                    % file should have the exact amount of rows required.
+                    % If the file was modified beyond changing the actual
+                    % numbers within the statistics, something has possibly
+                    % gone wrong. 
+                    all_values_found = false;
+                    
             end
         end
         % To make the game more user-friendly, the all_values_found flag
         % will be checked and if it is not 'true', then we should send an
         % error message to the user.
         if ~all_values_found
+            player_stats = init_player_stats();
             disp("There was an error while loading some of your stats. Default values were inserted instead.")
+        else
+            disp("Stats loaded successfully. Press 's' to view them.");
         end
     catch ME % from https://au.mathworks.com/help/matlab/ref/mexception.html: any matlab code which throws
              % an error throws an ME; a MException object. so in case of
@@ -409,3 +399,42 @@ function player_stats = load_stats_from_file(filename)
 
     fclose(fid); % close the file to prevent issues
 end
+
+function display_player_stats(player_stats)
+    %% DISPLAY_PLAYER_STATS Based on a struct player_stats, print the
+    % statistics out to the player.
+    %
+    % display_player_stats(s) prints out the stats associated with s.
+
+    % preventing division by zero
+    win_loss_ratio = 0;
+    if ~(player_stats.games_played == 0) % win loss ratio = games won / games played, 
+                                         % therefore if games played = 0 we find that win loss ratio = 0/0 = NaN. 
+        win_loss_ratio = player_stats.games_won/player_stats.games_played;
+    end
+    fprintf('\n--- PLAYER STATS ---\n');
+    fprintf('Games Played: %d | Won: %d | Lost: %d | W/L Ratio: %.2f\n', player_stats.games_played, player_stats.games_won, player_stats.games_lost, win_loss_ratio);
+    fprintf('Correct Guesses: %d | Wrong Guesses: %d\n', player_stats.correct_guesses, player_stats.wrong_guesses);
+    fprintf('Longest Word: %s | Shortest Word: %s\n', player_stats.longest_word, player_stats.shortest_word);
+    fprintf('Least Guesses to Win: %d | Most Guesses to Win: %d\n', ...
+        player_stats.least_guesses_to_win, player_stats.most_guesses_to_win);
+    fprintf('-------------------\n\n');
+end
+
+%% Save stats to file for loading in later sessions
+function save_stats_to_file(player_stats, filename)
+    fid = fopen(filename, 'w');
+    if fid == -1, error('Cannot open file for writing.'); end % fid == -1 means we couldn't open the file
+    fprintf(fid, 'games_played,%d\n', player_stats.games_played); % fprintf is used to print something to a file, i.e write to a file. see https://www.mathworks.com/help/matlab/ref/fprintf.html.
+    % fprintf(file, text, format) writes the formatted text to a file. 
+    fprintf(fid, 'games_won,%d\n', player_stats.games_won);
+    fprintf(fid, 'games_lost,%d\n', player_stats.games_lost);
+    fprintf(fid, 'correct_guesses,%d\n', player_stats.correct_guesses);
+    fprintf(fid, 'wrong_guesses,%d\n', player_stats.wrong_guesses);
+    fprintf(fid, 'longest_word,%s\n', player_stats.longest_word);
+    fprintf(fid, 'shortest_word,%s\n', player_stats.shortest_word);
+    fprintf(fid, 'least_guesses_to_win,%d\n', player_stats.least_guesses_to_win);
+    fprintf(fid, 'most_guesses_to_win,%d\n', player_stats.most_guesses_to_win);
+    fclose(fid); % close to prevent i/o errors
+end
+ 

@@ -74,3 +74,5 @@ Word examples: 'matlab', 'programming'
 | T29     | Restart game | Stats loaded from stats.txt          | File loaded successfully               | Pass      |
 ---------------------------------------------------------------
  
+
+NOTE THAT FOR EASY MODE after performing qa testing with family members, we found that 10 hints was too much. It was changed to 6 lives / 6 hints.
